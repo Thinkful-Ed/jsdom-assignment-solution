@@ -244,31 +244,88 @@ window.contacts = [
 
 /*
  Create and return the HTML to render a single contact card.
- The `contact` parameter is an object representing a single contact.
+ The `contact` parameter is an object representing a single contact. 
 */
-function renderContact(contact) {}
+function renderContact(contact) {
+  const {
+    id,
+    picture,
+    name,
+    email,
+    phone,
+    website,
+    address: { suite, street, city, zipcode },
+    company: { name: company_name },
+  } = contact;
+  return `
+  <div class="card" data-id="${id}">
+          <button class="deleteBtn" title="Delete this contact">X</button>
+          <div class="avatar">
+            <div class="circle"></div>
+            <div class="circle"></div>
+            <img src="${picture}" />
+          </div>
+          <div class="info">
+            <span class="name big">${name}</span>
+            <span class="email small">${email}</span>
+          </div>
+          <div class="details">
+            <div class="phone">${phone}</div>
+            <div class="website">${website}</div>
+          </div>
+          <div class="additional">
+            <div class="address">
+              <div class="suite">${suite}</div>
+              <div class="street">${street}</div>
+              <div class="city">${city}, ${zipcode}</div>
+            </div>
+            <div class="company">
+              <div class="label">Works at</div>
+              <div class="company-name">${company_name}</div>
+            </div>
+          </div>
+        </div>
+  `;
+}
 
 /*
   Render the array of contacts and insert them on the DOM.
   The contacts should be rendered in the `section` with id "contacts".
 */
-function render(contacts) {}
+function render(contacts) {
+  const element = document.querySelector("#contacts");
+  element.innerHTML = contacts.map(renderContact).join("");
+  loadCities(contacts);
+}
 
 /*
   Filter by city. Filter the  array of contacts by the given city.
-  Return a new array containing the filtered list.
+  Return a new array containing the filtered list. 
   Do NOT modify the original array.
 */
-function filterByCity(city) {}
+function filterByCity(city) {
+  return contacts.filter((contact) => contact.address.city === city);
+}
 
 /*
   Add an `change` event listener to the `filterOptions` select element.
-  On `change` get the value selected by the user.
+  On `change` get the value selected by the user. 
   If the value is "0" call `render()` with the complete contacts list.
   If the value is not "0" call `filterByCity()` passing the value selected by
   the user. Then call `render()` with the filtered list.
 */
-function filterHandler() {}
+function filterHandler() {
+  const select = document.querySelector("#filterOptions");
+
+  select.addEventListener("change", (event) => {
+    const selected = event.target.value;
+    if (selected === "0") {
+      render(contacts);
+    } else {
+      render(filterByCity(selected));
+    }
+  });
+}
 
 /*
   Accepts an array of contacts.
@@ -276,26 +333,48 @@ function filterHandler() {}
   Create a list of cities from the contacts array with no duplicates then
   add an `<option>` element for each city to the select.
 */
-function loadCities(contacts) {}
+function loadCities(contacts) {
+  const cities = Array.from(
+    new Set(contacts.map((contact) => contact.address.city)).values()
+  ).map((city) => `<option value="${city}">${city}</option>`);
+  const select = document.querySelector("#filterOptions");
+  cities.unshift('<option value="0">-- Select a city --</option>');
+  select.innerHTML = cities.join("");
+}
 
 /*
   Remove the contact from the contact list with the given id.
 */
-function deleteContact(id) {}
+function deleteContact(id) {
+  const index = contacts.findIndex((contact) => contact.id === +id);
+  index >= 0 && contacts.splice(index, 1);
+}
 
 /*
   Add a `click` event handler to the `deleteBtn` elements.
-  When clicked, get the id of the card that was clicked from the
-  corresponding `data-id` then call `deleteContact()` and re-render
+  When clicked, get the id of the card that was clicked from the 
+  corresponding `data-id` then call `deleteContact()` and re-render 
   the list.
 */
-function deleteButtonHandler() {}
+function deleteButtonHandler() {
+  const contactsElement = document.querySelector("#contacts");
+  contactsElement.addEventListener("click", (event) => {
+    const card = event.target.parentNode;
+    deleteContact(card.dataset.id);
+    loadCities(contacts);
+    render(contacts);
+  });
+}
 
 /*
-  Perform all startup tasks here. Use this function to attach the
+  Perform all startup tasks here. Use this function to attach the 
   required event listeners, call loadCities() then call render().
 */
-function main() {}
+function main() {
+  filterHandler();
+  deleteButtonHandler();
+  render(contacts);
+}
 
 window.addEventListener("DOMContentLoaded", main);
 
@@ -311,3 +390,4 @@ window.loadCities = loadCities;
 window.deleteContact = deleteContact;
 window.deleteButtonHandler = deleteButtonHandler;
 window.main = main;
+
